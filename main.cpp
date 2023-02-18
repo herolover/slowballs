@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
         .width = surface->w,
         .height = surface->h,
         .amount = 80'000,
-        .radius = 2.0,
+        .radius = 1.0,
         .gravity = 0.004,
         .damping = 0.99,
         .response_force = 0.4,

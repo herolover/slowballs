@@ -87,6 +87,7 @@ void SlowBalls::update()
 
 void SlowBalls::check_collisions()
 {
+    int min_grid_pos = std::numeric_limits<int>::max();
     std::fill(_grid_size.begin(), _grid_size.end(), 0);
     for (int i = 0; i < _params.amount; ++i)
     {
@@ -94,13 +95,14 @@ void SlowBalls::check_collisions()
         const int grid_y = _y[i] / _grid_cell_size;
 
         const int grid_pos = grid_y * _grid_width + grid_x;
+        min_grid_pos = std::min(min_grid_pos, grid_pos);
 
         _grid[grid_pos][_grid_size[grid_pos]++] = i;
     }
 
     static const std::array<int, 4> neighbours = {1, _grid_width - 1, _grid_width, _grid_width + 1};
 
-    auto check_indexes = [this](int i, int j) {
+    auto resolve_collision = [this](int i, int j) {
         auto& x_i = _x[i];
         auto& y_i = _y[i];
 
@@ -132,7 +134,7 @@ void SlowBalls::check_collisions()
 
     for (int iter = 0; iter < _params.iterations; ++iter)
     {
-        for (int i = 0; i < _grid.size(); ++i)
+        for (int i = min_grid_pos; i < _grid.size(); ++i)
         {
             for (int j = 0; j < _grid_size[i]; ++j)
             {
@@ -143,7 +145,7 @@ void SlowBalls::check_collisions()
                         continue;
                     }
 
-                    check_indexes(_grid[i][j], _grid[i][k]);
+                    resolve_collision(_grid[i][j], _grid[i][k]);
                 }
 
                 for (auto neighbour : neighbours)
@@ -152,7 +154,7 @@ void SlowBalls::check_collisions()
                     {
                         for (int k = 0; k < _grid_size[i + neighbour]; ++k)
                         {
-                            check_indexes(_grid[i][j], _grid[i + neighbour][k]);
+                            resolve_collision(_grid[i][j], _grid[i + neighbour][k]);
                         }
                     }
                 }
