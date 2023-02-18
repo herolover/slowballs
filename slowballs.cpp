@@ -130,7 +130,7 @@ void SlowBalls::check_collisions()
         }
     };
 
-    for (int iter = 0; iter < 2; ++iter)
+    for (int iter = 0; iter < _params.iterations; ++iter)
     {
         for (int i = 0; i < _grid.size(); ++i)
         {

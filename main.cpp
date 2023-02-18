@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
         .damping = 0.99,
         .response_force = 0.4,
         .penetration_ratio = 0.3,
+        .iterations = 2,
     });
     const auto& x = balls.x();
     const auto& y = balls.y();

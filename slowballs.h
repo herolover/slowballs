@@ -16,6 +16,7 @@ struct Params
     const double damping = 0.99;
     const double response_force = 0.4;
     const double penetration_ratio = 0.3;
+    const int iterations = 2;
 };
 
 class SlowBalls
