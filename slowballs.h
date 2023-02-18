@@ -44,6 +44,7 @@ public:
 private:
     void check_bounds(int i);
     void check_collisions();
+    void resolve_collision(int i, int j);
 
     const Params _params;
 

@@ -85,6 +85,37 @@ void SlowBalls::update()
     }
 }
 
+void SlowBalls::resolve_collision(int i, int j)
+{
+    auto& x_i = _x[i];
+    auto& y_i = _y[i];
+
+    auto& x_j = _x[j];
+    auto& y_j = _y[j];
+
+    double distance_x = x_i - x_j;
+    double distance_y = y_i - y_j;
+    if (distance_x == 0.0 && distance_y == 0.0)
+    {
+        distance_x = _double_radius * 0.5;
+        distance_y = _double_radius * 0.5;
+    }
+    const double square_distance_x = distance_x * distance_x;
+    const double square_distance_y = distance_y * distance_y;
+    const double square_distance = square_distance_x + square_distance_y;
+
+    if (square_distance < _square_min_distance)
+    {
+        const double distance = sqrt(square_distance);
+        const double distance_diff = std::min(_double_radius - distance, _double_radius * _params.penetration_ratio);
+        _x[i] += distance_x / distance * distance_diff * _params.response_force;
+        _y[i] += distance_y / distance * distance_diff * _params.response_force;
+
+        _x[j] -= distance_x / distance * distance_diff * _params.response_force;
+        _y[j] -= distance_y / distance * distance_diff * _params.response_force;
+    }
+}
+
 void SlowBalls::check_collisions()
 {
     int min_grid_pos = std::numeric_limits<int>::max();
@@ -101,36 +132,6 @@ void SlowBalls::check_collisions()
     }
 
     static const std::array<int, 4> neighbours = {1, _grid_width - 1, _grid_width, _grid_width + 1};
-
-    auto resolve_collision = [this](int i, int j) {
-        auto& x_i = _x[i];
-        auto& y_i = _y[i];
-
-        auto& x_j = _x[j];
-        auto& y_j = _y[j];
-
-        double distance_x = x_i - x_j;
-        double distance_y = y_i - y_j;
-        if (distance_x == 0.0 && distance_y == 0.0)
-        {
-            distance_x = _double_radius * 0.5;
-            distance_y = _double_radius * 0.5;
-        }
-        const double square_distance_x = distance_x * distance_x;
-        const double square_distance_y = distance_y * distance_y;
-        const double square_distance = square_distance_x + square_distance_y;
-
-        if (square_distance < _square_min_distance)
-        {
-            const double distance = sqrt(square_distance);
-            const double distance_diff = std::min(_double_radius - distance, _double_radius * _params.penetration_ratio);
-            _x[i] += distance_x / distance * distance_diff * _params.response_force;
-            _y[i] += distance_y / distance * distance_diff * _params.response_force;
-
-            _x[j] -= distance_x / distance * distance_diff * _params.response_force;
-            _y[j] -= distance_y / distance * distance_diff * _params.response_force;
-        }
-    };
 
     for (int iter = 0; iter < _params.iterations; ++iter)
     {
