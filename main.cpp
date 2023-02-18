@@ -44,7 +44,8 @@ int main(int argc, char* argv[])
     while (true)
     {
         SDL_PollEvent(&event);
-        if (event.type == SDL_EVENT_QUIT)
+        if (event.type == SDL_EVENT_QUIT
+            || event.type == SDL_EVENT_KEY_DOWN && event.key.keysym.sym == SDLK_ESCAPE)
         {
             break;
         }
