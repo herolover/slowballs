@@ -141,11 +141,6 @@ void SlowBalls::check_collisions()
             {
                 for (int k = j + 1; k < _grid_size[i]; ++k)
                 {
-                    if (_grid[i][j] == _grid[i][k])
-                    {
-                        continue;
-                    }
-
                     resolve_collision(_grid[i][j], _grid[i][k]);
                 }
 
