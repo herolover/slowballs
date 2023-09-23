@@ -32,7 +32,7 @@ public:
         for (int i = 0; i < params.amount; ++i)
         {
             const int offset = params.double_radius() * i;
-            _pos[i].x = params.min_x() * ((offset / width % 2 == 0) ? 2 : 1) + (offset % width);
+            _pos[i].x = params.min_x() * ((offset / width % 2 == 0) ? 1.5 : 1) + (offset % width);
             _pos[i].y = params.min_y() + (offset / width) * params.double_radius();
 
         }
