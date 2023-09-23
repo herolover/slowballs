@@ -27,19 +27,19 @@ int main(int argc, char* argv[])
 
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
-    slowballs::SlowBalls balls({
-        .width = surface->w,
-        .height = surface->h,
+    constexpr slowballs::Params params{
+        .width = width * 125 / 100,
+        .height = height * 125 / 100,
         .amount = 80'000,
-        .radius = 1.0,
+        .radius = 1.5,
         .gravity = 0.004,
         .damping = 0.99,
         .response_force = 0.4,
         .penetration_ratio = 0.3,
         .iterations = 2,
-    });
-    const auto& x = balls.x();
-    const auto& y = balls.y();
+    };
+
+    slowballs::SlowBalls<params> balls;
 
     while (true)
     {
@@ -57,10 +57,10 @@ int main(int argc, char* argv[])
         SDL_LockSurface(surface);
         SDL_memset(surface->pixels, 32, surface->h * surface->pitch);
 
-        for (int i = 0; i < balls.amount(); ++i)
+        for (int i = 0; i < balls.pos().size(); ++i)
         {
             uint32_t* data = static_cast<uint32_t*>(surface->pixels);
-            data[static_cast<int>(y[i]) * surface->w + static_cast<int>(x[i])] = SDL_MapRGB(surface->format, 255, 255, 255);
+            data[static_cast<int>(balls.pos()[i].y) * surface->w + static_cast<int>(balls.pos()[i].x)] = SDL_MapRGB(surface->format, 255, 255, 255);
         }
 
         SDL_UnlockSurface(surface);
