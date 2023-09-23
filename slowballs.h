@@ -9,16 +9,15 @@
 
 namespace slowballs {
 
-struct GridCell
+template<class T, size_t Size>
+struct FixedVector
 {
-    using index_t = uint32_t;
-
-    std::array<index_t, 4> indexes;
+    std::array<T, Size> items;
     uint8_t size = 0;
 
-    inline void add(const index_t index)
+    inline void add(const T item)
     {
-        indexes[size++] = index;
+        items[size++] = item;
     }
 };
 
@@ -70,22 +69,27 @@ private:
 
     void resolve_collision(int i, int j)
     {
-        Vec diff = _pos[i] - _pos[j];
+        resolve_collision(_pos[i], _pos[j]);
+    }
+
+    void resolve_collision(Vec* a, Vec* b)
+    {
+        Vec diff = *a - *b;
         const real_t square_distance = diff.square_length();
         if (square_distance < params.square_min_distance())
         {
             const real_t distance = sqrtf(square_distance);
             const real_t distance_diff = params.double_radius() - distance;
             diff *= distance_diff * params.response_force / distance;
-            _pos[i] += diff;
-            _pos[j] -= diff;
+            *a += diff;
+            *b -= diff;
         }
     }
 
     void check_collisions()
     {
         int min_grid_pos = std::numeric_limits<int>::max();
-        std::memset(&_grid[0], 0, _grid.size() * sizeof(GridCell));
+        std::memset(&_grid[0], 0, _grid.size() * sizeof(decltype(_grid)::value_type));
         for (int i = 0; i < params.amount; ++i)
         {
             const int grid_x = _pos[i].x / params.grid_cell_size();
@@ -94,10 +98,10 @@ private:
             const int grid_pos = grid_y * params.grid_width() + grid_x;
             min_grid_pos = std::min(min_grid_pos, grid_pos);
 
-            _grid[grid_pos].add(i);
+            _grid[grid_pos].add(&_pos[i]);
         }
 
-        static const std::array<int, 4> neighbours = {1, params.grid_width() - 1, params.grid_width(), params.grid_width() + 1};
+        constexpr std::array<int, 4> neighbours = {1, params.grid_width() - 1, params.grid_width(), params.grid_width() + 1};
 
         for (int iter = 0; iter < params.iterations; ++iter)
         {
@@ -107,7 +111,7 @@ private:
                 {
                     for (int k = j + 1; k < _grid[i].size; ++k)
                     {
-                        resolve_collision(_grid[i].indexes[j], _grid[i].indexes[k]);
+                        resolve_collision(_grid[i].items[j], _grid[i].items[k]);
                     }
 
                     for (auto neighbour : neighbours)
@@ -116,7 +120,7 @@ private:
                         {
                             for (int k = 0; k < _grid[i + neighbour].size; ++k)
                             {
-                                resolve_collision(_grid[i].indexes[j], _grid[i + neighbour].indexes[k]);
+                                resolve_collision(_grid[i].items[j], _grid[i + neighbour].items[k]);
                             }
                         }
                     }
@@ -128,7 +132,7 @@ private:
     std::array<Vec, params.amount> _pos;
     std::array<Vec, params.amount> _prev_pos;
 
-    std::array<GridCell, params.grid_size()> _grid;
+    std::array<FixedVector<Vec*, 4>, params.grid_size()> _grid;
 };
 
 }
