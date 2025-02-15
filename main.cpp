@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     constexpr slowballs::Params params{
         .width = width * 125 / 100,
         .height = height * 125 / 100,
-        .amount = 80'000,
+        .amount = 65'000,
         .radius = 1.5,
         .gravity = 0.004,
         .damping = 0.99,
@@ -40,6 +40,7 @@ int main(int argc, char* argv[])
     };
 
     slowballs::SlowBalls<params> balls;
+    std::cout << sizeof(balls) << std::endl;
 
     while (true)
     {
@@ -49,6 +50,10 @@ int main(int argc, char* argv[])
         {
             break;
         }
+        else if (event.type == SDL_EVENT_KEY_DOWN && event.key.keysym.sym == SDLK_SPACE)
+        {
+            balls.sort();
+        }
 
         auto t1 = std::chrono::steady_clock::now();
         balls.update();
@@ -57,10 +62,10 @@ int main(int argc, char* argv[])
         SDL_LockSurface(surface);
         SDL_memset(surface->pixels, 32, surface->h * surface->pitch);
 
-        for (int i = 0; i < balls.pos().size(); ++i)
+        for (int i = 0; i < balls._pos.size(); ++i)
         {
             uint32_t* data = static_cast<uint32_t*>(surface->pixels);
-            data[static_cast<int>(balls.pos()[i].y) * surface->w + static_cast<int>(balls.pos()[i].x)] = SDL_MapRGB(surface->format, 255, 255, 255);
+            data[static_cast<int>(balls._pos[i].y) * surface->w + static_cast<int>(balls._pos[i].x)] = SDL_MapRGB(surface->format, 255, 255, 255);
         }
 
         SDL_UnlockSurface(surface);
