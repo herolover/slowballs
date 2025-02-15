@@ -5,9 +5,12 @@
 namespace slowballs
 {
 
-struct SlowBallsBruteforce : SlowBalls
+template<Config config>
+struct SlowBallsBruteforce : SlowBalls<config>
 {
-    using SlowBalls::SlowBalls;
+    using SlowBalls<config>::SlowBalls;
+    using SlowBalls<config>::pos_x;
+    using SlowBalls<config>::pos_y;
     
     void resolve_collision(const uint16_t i, const uint16_t j)
     {
@@ -31,7 +34,7 @@ struct SlowBallsBruteforce : SlowBalls
         }
     }
 
-    void check_collisions() override
+    void check_collisions()
     {
         for (int i = 0; i < config.amount; ++i)
         {

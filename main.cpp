@@ -1,14 +1,12 @@
-#include "SlowBalls.h"
 #include "SlowBallsBruteforce.h"
 #include "SlowBallsBruteforceSimd.h"
+#include "SlowBallsGrid.h"
 
 #include <SDL3/SDL.h>
 
 #include <chrono>
 #include <format>
 #include <iostream>
-#include <memory>
-#include <vector>
 
 int main(int argc, char* argv[])
 {
@@ -30,7 +28,7 @@ int main(int argc, char* argv[])
 
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
-    constexpr slowballs::Config config{
+    constexpr slowballs::Config bruteforce_config{
         .width = width * 125 / 100,
         .height = height * 125 / 100,
         .amount = 5'000,
@@ -41,8 +39,59 @@ int main(int argc, char* argv[])
         .penetration_ratio = 0.3,
         .iterations = 2,
     };
+    constexpr slowballs::Config grid_config{
+        .width = width * 125 / 100,
+        .height = height * 125 / 100,
+        .amount = 65'000,
+        .radius = 1.5,
+        .gravity = 0.004,
+        .damping = 0.99,
+        .response_force = 0.4,
+        .penetration_ratio = 0.3,
+        .iterations = 2,
+    };
 
-    std::unique_ptr<slowballs::SlowBalls> balls = std::make_unique<slowballs::SlowBallsBruteforceSimd>(config);
+    int ballsVersion = 1;
+    slowballs::SlowBallsBruteforce<bruteforce_config> balls1;
+    slowballs::SlowBallsBruteforceSimd<bruteforce_config> balls2;
+    slowballs::SlowBallsGrid<grid_config> balls3;
+
+    auto update = [&]() {
+        switch (ballsVersion)
+        {
+        case 1:
+            balls1.update();
+            return;
+        case 2:
+            balls2.update();
+            return;
+        case 3:
+            balls3.update();
+            return;
+        default:
+            return;
+        }
+    };
+
+    auto render = [&]() {
+        static const auto value = SDL_MapRGB(surface->format, 255, 255, 255);
+
+        uint32_t* data = static_cast<uint32_t*>(surface->pixels);
+        switch (ballsVersion)
+        {
+        case 1:
+            balls1.render(data, value, surface->w);
+            return;
+        case 2:
+            balls2.render(data, value, surface->w);
+            return;
+        case 3:
+            balls3.render(data, value, surface->w);
+            return;
+        default:
+            return;
+        }
+    };
 
     while (true)
     {
@@ -60,26 +109,28 @@ int main(int argc, char* argv[])
             }
             else if (event.key.keysym.sym == SDLK_1)
             {
-                balls = std::make_unique<slowballs::SlowBallsBruteforce>(config);
+                ballsVersion = 1;
             }
             else if (event.key.keysym.sym == SDLK_2)
             {
-                balls = std::make_unique<slowballs::SlowBallsBruteforceSimd>(config);
+                ballsVersion = 2;
+            }
+            else if (event.key.keysym.sym == SDLK_3)
+            {
+                ballsVersion = 3;
             }
         }
 
         auto t1 = std::chrono::steady_clock::now();
-        balls->update();
+
+        update();
+
         auto t2 = std::chrono::steady_clock::now();
 
         SDL_LockSurface(surface);
         SDL_memset(surface->pixels, 32, surface->h * surface->pitch);
 
-        for (int i = 0; i < balls->pos_x.size(); ++i)
-        {
-            uint32_t* data = static_cast<uint32_t*>(surface->pixels);
-            data[static_cast<int>(balls->pos_y[i]) * surface->w + static_cast<int>(balls->pos_x[i])] = SDL_MapRGB(surface->format, 255, 255, 255);
-        }
+        render();
 
         SDL_UnlockSurface(surface);
         SDL_UpdateWindowSurface(window);

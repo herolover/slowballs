@@ -2,14 +2,19 @@
 
 #include "SlowBalls.h"
 
+#include <immintrin.h>
+
 namespace slowballs
 {
 
-struct SlowBallsBruteforceSimd : SlowBalls
+template<Config config>
+struct SlowBallsBruteforceSimd : SlowBalls<config>
 {
-    using SlowBalls::SlowBalls;
+    using SlowBalls<config>::SlowBalls;
+    using SlowBalls<config>::pos_x;
+    using SlowBalls<config>::pos_y;
 
-    void check_collisions() override
+    void check_collisions()
     {
         auto min_distance = _mm256_set1_ps(config.square_min_distance());
         auto zero = _mm256_set1_ps(0.0f);

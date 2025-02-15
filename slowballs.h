@@ -2,23 +2,17 @@
 
 #include "config.h"
 
-#include <iostream>
-#include <memory>
-#include <vector>
-
-#include <immintrin.h>
+#include <array>
 
 namespace slowballs
 {
 
+template<Config config_v>
 struct SlowBalls
 {
-    SlowBalls(const Config& config)
-    : config(config)
-    , pos_x(config.amount)
-    , pos_y(config.amount)
-    , prev_pos_x(config.amount)
-    , prev_pos_y(config.amount)
+    static constexpr Config config = config_v;
+
+    SlowBalls()
     {
         const int width = config.max_x() - config.min_x();
         const int height = config.max_y() - config.min_y();
@@ -33,22 +27,32 @@ struct SlowBalls
         prev_pos_y = pos_y;
     }
 
-    void update()
+    template<typename Self>
+    void update(this Self&& self)
     {
-        check_collisions();
+        self.check_collisions();
 
         for (int i = 0; i < config.amount; ++i)
         {
-            pos_y[i] += config.gravity;
+            self.pos_y[i] += config.gravity;
 
-            const auto prev_x = pos_x[i];
-            const auto prev_y = pos_y[i];
-            pos_x[i] += (pos_x[i] - prev_pos_x[i]) * config.damping;
-            pos_y[i] += (pos_y[i] - prev_pos_y[i]) * config.damping;
-            prev_pos_x[i] = prev_x;
-            prev_pos_y[i] = prev_y;
+            const auto prev_x = self.pos_x[i];
+            const auto prev_y = self.pos_y[i];
+            self.pos_x[i] += (self.pos_x[i] - self.prev_pos_x[i]) * config.damping;
+            self.pos_y[i] += (self.pos_y[i] - self.prev_pos_y[i]) * config.damping;
+            self.prev_pos_x[i] = prev_x;
+            self.prev_pos_y[i] = prev_y;
 
-            check_bounds(i);
+            self.check_bounds(i);
+        }
+    }
+
+    template<typename Self>
+    void render(this Self&& self, uint32_t* data, uint32_t value, int width)
+    {
+        for (int i = 0; i < self.config.amount; ++i)
+        {
+            data[static_cast<int>(self.pos_y[i]) * width + static_cast<int>(self.pos_x[i])] = value;
         }
     }
 
@@ -58,13 +62,10 @@ struct SlowBalls
         pos_y[i] = std::min(std::max(pos_y[i], config.min_y()), config.max_y());
     }
 
-    virtual void check_collisions() = 0;
-
-    Config config;
-    alignas(64) std::vector<real_t> pos_x;
-    alignas(64) std::vector<real_t> pos_y;
-    alignas(64) std::vector<real_t> prev_pos_x;
-    alignas(64) std::vector<real_t> prev_pos_y;
+    alignas(64) std::array<real_t, config.amount> pos_x;
+    alignas(64) std::array<real_t, config.amount> pos_y;
+    alignas(64) std::array<real_t, config.amount> prev_pos_x;
+    alignas(64) std::array<real_t, config.amount> prev_pos_y;
 };
 
 } // namespace slowballs
