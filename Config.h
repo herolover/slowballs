@@ -5,7 +5,7 @@ namespace slowballs
 
 using real_t = float;
 
-struct Params
+struct Config
 {
     const int width;
     const int height;
@@ -73,4 +73,4 @@ struct Params
     }
 };
 
-}
+} // namespace slowballs

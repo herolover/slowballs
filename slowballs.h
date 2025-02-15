@@ -1,138 +1,70 @@
 #pragma once
 
-#include "vec.h"
-#include "params.h"
+#include "config.h"
 
-#include <array>
-#include <memory>
 #include <iostream>
+#include <memory>
+#include <vector>
 
-namespace slowballs {
+#include <immintrin.h>
 
-template<class T, size_t Size>
-struct FixedVector
+namespace slowballs
 {
-    std::array<T, Size> items;
-    uint8_t size = 0;
 
-    inline void add(const T item)
-    {
-        items[size++] = item;
-    }
-};
-
-template<Params params>
-class SlowBalls
+struct SlowBalls
 {
-public:
-    SlowBalls()
+    SlowBalls(const Config& config)
+    : config(config)
+    , pos_x(config.amount)
+    , pos_y(config.amount)
+    , prev_pos_x(config.amount)
+    , prev_pos_y(config.amount)
     {
-        constexpr int width = params.max_x() - params.min_x();
-        constexpr int height = params.max_y() - params.min_y();
-        for (int i = 0; i < params.amount; ++i)
+        const int width = config.max_x() - config.min_x();
+        const int height = config.max_y() - config.min_y();
+        for (int i = 0; i < config.amount; ++i)
         {
-            const int offset = params.double_radius() * i;
-            _pos[i].x = params.min_x() * ((offset / width % 2 == 0) ? 1.5 : 1) + (offset % width);
-            _pos[i].y = params.min_y() + (offset / width) * params.double_radius();
-
+            const int offset = config.double_radius() * i;
+            pos_x[i] = config.min_x() * ((offset / width % 2 == 0) ? 1.5f : 1.0f) + (offset % width);
+            pos_y[i] = config.min_y() + (offset / width) * config.double_radius();
         }
 
-        _prev_pos = _pos;
+        prev_pos_x = pos_x;
+        prev_pos_y = pos_y;
     }
 
     void update()
     {
         check_collisions();
 
-        for (int i = 0; i < params.amount; ++i)
+        for (int i = 0; i < config.amount; ++i)
         {
-            _pos[i].y += params.gravity;
+            pos_y[i] += config.gravity;
 
-            const Vec prev_pos = _pos[i];
-            _pos[i] += (_pos[i] - _prev_pos[i]) * params.damping;
-            _prev_pos[i] = prev_pos;
+            const auto prev_x = pos_x[i];
+            const auto prev_y = pos_y[i];
+            pos_x[i] += (pos_x[i] - prev_pos_x[i]) * config.damping;
+            pos_y[i] += (pos_y[i] - prev_pos_y[i]) * config.damping;
+            prev_pos_x[i] = prev_x;
+            prev_pos_y[i] = prev_y;
 
             check_bounds(i);
         }
     }
 
-    const auto& pos() const
-    {
-        return _pos;
-    }
-
-private:
     void check_bounds(int i)
     {
-        _pos[i].clamp(params.min_x(), params.max_x(), params.min_y(), params.max_y());
+        pos_x[i] = std::min(std::max(pos_x[i], config.min_x()), config.max_x());
+        pos_y[i] = std::min(std::max(pos_y[i], config.min_y()), config.max_y());
     }
 
-    void resolve_collision(int i, int j)
-    {
-        resolve_collision(_pos[i], _pos[j]);
-    }
+    virtual void check_collisions() = 0;
 
-    void resolve_collision(Vec* a, Vec* b)
-    {
-        Vec diff = *a - *b;
-        const real_t square_distance = diff.square_length();
-        if (square_distance < params.square_min_distance())
-        {
-            const real_t distance = sqrtf(square_distance);
-            const real_t distance_diff = params.double_radius() - distance;
-            diff *= distance_diff * params.response_force / distance;
-            *a += diff;
-            *b -= diff;
-        }
-    }
-
-    void check_collisions()
-    {
-        int min_grid_pos = std::numeric_limits<int>::max();
-        std::memset(&_grid[0], 0, _grid.size() * sizeof(decltype(_grid)::value_type));
-        for (int i = 0; i < params.amount; ++i)
-        {
-            const int grid_x = _pos[i].x / params.grid_cell_size();
-            const int grid_y = _pos[i].y / params.grid_cell_size();
-
-            const int grid_pos = grid_y * params.grid_width() + grid_x;
-            min_grid_pos = std::min(min_grid_pos, grid_pos);
-
-            _grid[grid_pos].add(&_pos[i]);
-        }
-
-        constexpr std::array<int, 4> neighbours = {1, params.grid_width() - 1, params.grid_width(), params.grid_width() + 1};
-
-        for (int iter = 0; iter < params.iterations; ++iter)
-        {
-            for (int i = min_grid_pos; i < _grid.size(); ++i)
-            {
-                for (int j = 0; j < _grid[i].size; ++j)
-                {
-                    for (int k = j + 1; k < _grid[i].size; ++k)
-                    {
-                        resolve_collision(_grid[i].items[j], _grid[i].items[k]);
-                    }
-
-                    for (auto neighbour : neighbours)
-                    {
-                        if (i + neighbour < _grid.size())
-                        {
-                            for (int k = 0; k < _grid[i + neighbour].size; ++k)
-                            {
-                                resolve_collision(_grid[i].items[j], _grid[i + neighbour].items[k]);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    std::array<Vec, params.amount> _pos;
-    std::array<Vec, params.amount> _prev_pos;
-
-    std::array<FixedVector<Vec*, 4>, params.grid_size()> _grid;
+    Config config;
+    alignas(64) std::vector<real_t> pos_x;
+    alignas(64) std::vector<real_t> pos_y;
+    alignas(64) std::vector<real_t> prev_pos_x;
+    alignas(64) std::vector<real_t> prev_pos_y;
 };
 
-}
+} // namespace slowballs

@@ -1,10 +1,13 @@
-#include "slowballs.h"
+#include "SlowBalls.h"
+#include "SlowBallsBruteforce.h"
+#include "SlowBallsBruteforceSimd.h"
 
 #include <SDL3/SDL.h>
 
 #include <chrono>
 #include <format>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 int main(int argc, char* argv[])
@@ -27,11 +30,11 @@ int main(int argc, char* argv[])
 
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
-    constexpr slowballs::Params params{
+    constexpr slowballs::Config config{
         .width = width * 125 / 100,
         .height = height * 125 / 100,
-        .amount = 80'000,
-        .radius = 1.5,
+        .amount = 5'000,
+        .radius = 3.5,
         .gravity = 0.004,
         .damping = 0.99,
         .response_force = 0.4,
@@ -39,7 +42,7 @@ int main(int argc, char* argv[])
         .iterations = 2,
     };
 
-    slowballs::SlowBalls<params> balls;
+    std::unique_ptr<slowballs::SlowBalls> balls = std::make_unique<slowballs::SlowBallsBruteforceSimd>(config);
 
     while (true)
     {
@@ -49,18 +52,33 @@ int main(int argc, char* argv[])
         {
             break;
         }
+        else if (event.type == SDL_EVENT_KEY_DOWN)
+        {
+            if (event.key.keysym.sym == SDLK_ESCAPE)
+            {
+                break;
+            }
+            else if (event.key.keysym.sym == SDLK_1)
+            {
+                balls = std::make_unique<slowballs::SlowBallsBruteforce>(config);
+            }
+            else if (event.key.keysym.sym == SDLK_2)
+            {
+                balls = std::make_unique<slowballs::SlowBallsBruteforceSimd>(config);
+            }
+        }
 
         auto t1 = std::chrono::steady_clock::now();
-        balls.update();
+        balls->update();
         auto t2 = std::chrono::steady_clock::now();
 
         SDL_LockSurface(surface);
         SDL_memset(surface->pixels, 32, surface->h * surface->pitch);
 
-        for (int i = 0; i < balls.pos().size(); ++i)
+        for (int i = 0; i < balls->pos_x.size(); ++i)
         {
             uint32_t* data = static_cast<uint32_t*>(surface->pixels);
-            data[static_cast<int>(balls.pos()[i].y) * surface->w + static_cast<int>(balls.pos()[i].x)] = SDL_MapRGB(surface->format, 255, 255, 255);
+            data[static_cast<int>(balls->pos_y[i]) * surface->w + static_cast<int>(balls->pos_x[i])] = SDL_MapRGB(surface->format, 255, 255, 255);
         }
 
         SDL_UnlockSurface(surface);

@@ -12,8 +12,7 @@ set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/submodules/sdl)
 
 add_executable(${PROJECT_NAME}
-    ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/slowballs.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp
 )
 target_link_options(${PROJECT_NAME} PRIVATE /STACK:10000000)
 target_link_libraries(${PROJECT_NAME} SDL3-static)
