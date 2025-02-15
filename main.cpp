@@ -1,6 +1,7 @@
 #include "SlowBallsBruteforce.h"
 #include "SlowBallsBruteforceSimd.h"
 #include "SlowBallsGrid.h"
+#include "SlowBallsGridSimd.h"
 
 #include <SDL3/SDL.h>
 
@@ -32,7 +33,7 @@ int main(int argc, char* argv[])
         .width = width * 125 / 100,
         .height = height * 125 / 100,
         .amount = 5'000,
-        .radius = 3.5,
+        .radius = 5.5,
         .gravity = 0.004,
         .damping = 0.99,
         .response_force = 0.4,
@@ -55,6 +56,7 @@ int main(int argc, char* argv[])
     slowballs::SlowBallsBruteforce<BRUTEFORCE_CONFIG> balls1;
     slowballs::SlowBallsBruteforceSimd<BRUTEFORCE_CONFIG> balls2;
     slowballs::SlowBallsGrid<GRID_CONFIG> balls3;
+    slowballs::SlowBallsGridSimd<GRID_CONFIG> balls4;
 
     auto update = [&]() {
         switch (ballsVersion)
@@ -67,6 +69,9 @@ int main(int argc, char* argv[])
             return;
         case 3:
             balls3.update();
+            return;
+        case 4:
+            balls4.update();
             return;
         default:
             return;
@@ -87,6 +92,9 @@ int main(int argc, char* argv[])
             return;
         case 3:
             balls3.render(data, value, surface->w);
+            return;
+        case 4:
+            balls4.render(data, value, surface->w);
             return;
         default:
             return;
@@ -118,6 +126,10 @@ int main(int argc, char* argv[])
             else if (event.key.keysym.sym == SDLK_3)
             {
                 ballsVersion = 3;
+            }
+            else if (event.key.keysym.sym == SDLK_4)
+            {
+                ballsVersion = 4;
             }
         }
 

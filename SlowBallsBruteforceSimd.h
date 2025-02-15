@@ -29,8 +29,8 @@ struct SlowBallsBruteforceSimd : SlowBalls<CONFIG>
             auto diff_y1 = _mm256_set1_ps(0.0f);
             for (uint16_t j = i / 8 * 8; j < CONFIG.amount; j += 8)
             {
-                auto x2 = _mm256_loadu_ps(&pos_x[j]);
-                auto y2 = _mm256_loadu_ps(&pos_y[j]);
+                auto x2 = _mm256_load_ps(&pos_x[j]);
+                auto y2 = _mm256_load_ps(&pos_y[j]);
                 auto diff_x = _mm256_sub_ps(x1, x2);
                 auto diff_y = _mm256_sub_ps(y1, y2);
 
@@ -56,12 +56,12 @@ struct SlowBallsBruteforceSimd : SlowBalls<CONFIG>
         }
     }
 
-    inline float reduce_add(__m256 v)
+    inline static real_t reduce_add(__m256 v)
     {
         v = _mm256_hadd_ps(v, v);
         v = _mm256_hadd_ps(v, v);
 
-        float res[8];
+        real_t res[8];
         _mm256_store_ps(res, v);
 
         return res[0] + res[4];

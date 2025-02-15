@@ -14,7 +14,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/submodules/sdl)
 add_executable(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp
 )
-target_link_options(${PROJECT_NAME} PRIVATE /STACK:10000000)
+target_link_options(${PROJECT_NAME} PRIVATE /STACK:20000000)
 target_link_libraries(${PROJECT_NAME} SDL3-static)
 
 install(
