@@ -7,27 +7,27 @@
 namespace slowballs
 {
 
-template<Config config>
-struct SlowBallsBruteforceSimd : SlowBalls<config>
+template<Config CONFIG>
+struct SlowBallsBruteforceSimd : SlowBalls<CONFIG>
 {
-    using SlowBalls<config>::SlowBalls;
-    using SlowBalls<config>::pos_x;
-    using SlowBalls<config>::pos_y;
+    using SlowBalls<CONFIG>::SlowBalls;
+    using SlowBalls<CONFIG>::pos_x;
+    using SlowBalls<CONFIG>::pos_y;
 
     void check_collisions()
     {
-        auto min_distance = _mm256_set1_ps(config.square_min_distance());
+        auto min_distance = _mm256_set1_ps(CONFIG.square_min_distance());
         auto zero = _mm256_set1_ps(0.0f);
-        auto double_radius = _mm256_set1_ps(config.double_radius());
-        auto response_force = _mm256_set1_ps(config.response_force);
+        auto double_radius = _mm256_set1_ps(CONFIG.double_radius());
+        auto response_force = _mm256_set1_ps(CONFIG.response_force);
 
-        for (uint16_t i = 0; i < config.amount; ++i)
+        for (uint16_t i = 0; i < CONFIG.amount; ++i)
         {
             auto x1 = _mm256_set1_ps(pos_x[i]);
             auto y1 = _mm256_set1_ps(pos_y[i]);
             auto diff_x1 = _mm256_set1_ps(0.0f);
             auto diff_y1 = _mm256_set1_ps(0.0f);
-            for (uint16_t j = i / 8 * 8; j < config.amount; j += 8)
+            for (uint16_t j = i / 8 * 8; j < CONFIG.amount; j += 8)
             {
                 auto x2 = _mm256_loadu_ps(&pos_x[j]);
                 auto y2 = _mm256_loadu_ps(&pos_y[j]);

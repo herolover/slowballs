@@ -8,32 +8,32 @@
 namespace slowballs
 {
 
-template<Config config>
-struct SlowBallsGrid : SlowBallsBruteforce<config>
+template<Config CONFIG>
+struct SlowBallsGrid : SlowBallsBruteforce<CONFIG>
 {
-    using SlowBallsBruteforce<config>::SlowBallsBruteforce;
-    using SlowBallsBruteforce<config>::resolve_collision;
-    using SlowBalls<config>::pos_x;
-    using SlowBalls<config>::pos_y;
+    using SlowBallsBruteforce<CONFIG>::SlowBallsBruteforce;
+    using SlowBallsBruteforce<CONFIG>::resolve_collision;
+    using SlowBalls<CONFIG>::pos_x;
+    using SlowBalls<CONFIG>::pos_y;
 
     void check_collisions()
     {
         int min_grid_pos = std::numeric_limits<int>::max();
         _grid_size.fill(0);
-        for (int i = 0; i < config.amount; ++i)
+        for (int i = 0; i < CONFIG.amount; ++i)
         {
-            const int grid_x = pos_x[i] / config.grid_cell_size();
-            const int grid_y = pos_y[i] / config.grid_cell_size();
+            const int grid_x = pos_x[i] / CONFIG.grid_cell_size();
+            const int grid_y = pos_y[i] / CONFIG.grid_cell_size();
 
-            const int grid_pos = grid_y * config.grid_width() + grid_x;
+            const int grid_pos = grid_y * CONFIG.grid_width() + grid_x;
             min_grid_pos = std::min(min_grid_pos, grid_pos);
 
             _grid[grid_pos][_grid_size[grid_pos]++] = i;
         }
 
-        constexpr std::array<int, 4> neighbours = {1, config.grid_width() - 1, config.grid_width(), config.grid_width() + 1};
+        constexpr std::array<int, 4> neighbours = {1, CONFIG.grid_width() - 1, CONFIG.grid_width(), CONFIG.grid_width() + 1};
 
-        for (int iter = 0; iter < config.iterations; ++iter)
+        for (int iter = 0; iter < CONFIG.iterations; ++iter)
         {
             for (int i = min_grid_pos; i < _grid.size(); ++i)
             {
@@ -59,8 +59,8 @@ struct SlowBallsGrid : SlowBallsBruteforce<config>
         }
     }
 
-    std::array<uint16_t, config.grid_size()> _grid_size;
-    std::array<std::array<uint16_t, 4>, config.grid_size()> _grid;
+    std::array<uint16_t, CONFIG.grid_size()> _grid_size;
+    std::array<std::array<uint16_t, 4>, CONFIG.grid_size()> _grid;
 };
 
 } // namespace slowballs

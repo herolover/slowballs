@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
-    constexpr slowballs::Config bruteforce_config{
+    constexpr slowballs::Config BRUTEFORCE_CONFIG{
         .width = width * 125 / 100,
         .height = height * 125 / 100,
         .amount = 5'000,
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
         .penetration_ratio = 0.3,
         .iterations = 2,
     };
-    constexpr slowballs::Config grid_config{
+    constexpr slowballs::Config GRID_CONFIG{
         .width = width * 125 / 100,
         .height = height * 125 / 100,
         .amount = 65'000,
@@ -52,9 +52,9 @@ int main(int argc, char* argv[])
     };
 
     int ballsVersion = 1;
-    slowballs::SlowBallsBruteforce<bruteforce_config> balls1;
-    slowballs::SlowBallsBruteforceSimd<bruteforce_config> balls2;
-    slowballs::SlowBallsGrid<grid_config> balls3;
+    slowballs::SlowBallsBruteforce<BRUTEFORCE_CONFIG> balls1;
+    slowballs::SlowBallsBruteforceSimd<BRUTEFORCE_CONFIG> balls2;
+    slowballs::SlowBallsGrid<GRID_CONFIG> balls3;
 
     auto update = [&]() {
         switch (ballsVersion)
