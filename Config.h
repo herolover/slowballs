@@ -1,9 +1,18 @@
 #pragma once
 
+#include "HugePageAllocator.h"
+
+#include <stdfloat>
+#include <vector>
+
 namespace slowballs
 {
 
 using real_t = float;
+
+template <typename T>
+//using vector_t = std::vector<T, HugePageAllocator<T>>;
+using vector_t = std::vector<T>;
 
 struct Config
 {

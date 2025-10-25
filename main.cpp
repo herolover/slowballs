@@ -1,13 +1,14 @@
 #include "SlowBallsBruteforce.h"
-#include "SlowBallsBruteforceSimd.h"
 #include "SlowBallsGrid.h"
-#include "SlowBallsGridSimd.h"
+#include "solvers/SweepAndPrune.h"
 
 #include <SDL3/SDL.h>
 
 #include <chrono>
 #include <format>
 #include <iostream>
+#include <memory>
+#include <print>
 
 int main(int argc, char* argv[])
 {
@@ -52,55 +53,7 @@ int main(int argc, char* argv[])
         .iterations = 2,
     };
 
-    int ballsVersion = 1;
-    slowballs::SlowBallsBruteforce<BRUTEFORCE_CONFIG> balls1;
-    slowballs::SlowBallsBruteforceSimd<BRUTEFORCE_CONFIG> balls2;
-    slowballs::SlowBallsGrid<GRID_CONFIG> balls3;
-    slowballs::SlowBallsGridSimd<GRID_CONFIG> balls4;
-
-    auto update = [&]() {
-        switch (ballsVersion)
-        {
-        case 1:
-            balls1.update();
-            return;
-        case 2:
-            balls2.update();
-            return;
-        case 3:
-            balls3.update();
-            return;
-        case 4:
-            balls4.update();
-            return;
-        default:
-            return;
-        }
-    };
-
-    auto render = [&]() {
-        static const auto value = SDL_MapRGB(surface->format, 255, 255, 255);
-
-        uint32_t* data = static_cast<uint32_t*>(surface->pixels);
-        switch (ballsVersion)
-        {
-        case 1:
-            balls1.render(data, value, surface->w);
-            return;
-        case 2:
-            balls2.render(data, value, surface->w);
-            return;
-        case 3:
-            balls3.render(data, value, surface->w);
-            return;
-        case 4:
-            balls4.render(data, value, surface->w);
-            return;
-        default:
-            return;
-        }
-    };
-
+    std::unique_ptr<slowballs::SlowBalls> balls = std::make_unique<slowballs::SlowBallsGrid>(GRID_CONFIG);
     while (true)
     {
         SDL_PollEvent(&event);
@@ -117,38 +70,39 @@ int main(int argc, char* argv[])
             }
             else if (event.key.keysym.sym == SDLK_1)
             {
-                ballsVersion = 1;
+                balls = std::make_unique<slowballs::SlowBallsBruteforce>(BRUTEFORCE_CONFIG);
             }
             else if (event.key.keysym.sym == SDLK_2)
             {
-                ballsVersion = 2;
+                balls = std::make_unique<slowballs::SlowBallsSweepAndPrune>(GRID_CONFIG);
             }
             else if (event.key.keysym.sym == SDLK_3)
             {
-                ballsVersion = 3;
+                balls = std::make_unique<slowballs::SlowBallsGrid>(GRID_CONFIG);
             }
             else if (event.key.keysym.sym == SDLK_4)
             {
-                ballsVersion = 4;
             }
         }
 
         auto t1 = std::chrono::steady_clock::now();
 
-        update();
+        balls->update();
 
         auto t2 = std::chrono::steady_clock::now();
 
         SDL_LockSurface(surface);
         SDL_memset(surface->pixels, 32, surface->h * surface->pitch);
 
-        render();
+        static const auto value = SDL_MapRGB(surface->format, 255, 255, 255);
+        uint32_t* data = static_cast<uint32_t*>(surface->pixels);
+        balls->render(data, value, surface->w);
 
         SDL_UnlockSurface(surface);
         SDL_UpdateWindowSurface(window);
         auto t3 = std::chrono::steady_clock::now();
 
-        std::cout << std::format("physics: {} ms  \nrender: {} ms  \r\033[F", std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000.0, std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2).count() / 1000.0);
+        std::print("physics: {} ms  \nrender: {} ms  \r\033[F", std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000.0, std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2).count() / 1000.0);
     }
 
     SDL_DestroyRenderer(renderer);

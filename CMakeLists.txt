@@ -9,12 +9,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
 
+set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/OPT:REF /OPT:ICF")
+
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/submodules/sdl)
 
 add_executable(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp
 )
-target_link_options(${PROJECT_NAME} PRIVATE /STACK:20000000)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} SDL3-static)
 
 install(
