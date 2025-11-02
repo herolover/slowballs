@@ -82,7 +82,7 @@ struct SlowBallsGridSimd : SlowBallsBruteforceSimd<CONFIG>
             return;
         }
 
-        auto min_distance = _mm256_set1_ps(CONFIG.square_min_distance());
+        constexpr auto min_distance = _mm256_set1_ps(CONFIG.square_min_distance());
         auto zero = _mm256_set1_ps(0.0f);
         auto double_radius = _mm256_set1_ps(CONFIG.double_radius());
         auto response_force = _mm256_set1_ps(CONFIG.response_force);

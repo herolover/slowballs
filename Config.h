@@ -8,6 +8,7 @@
 namespace slowballs
 {
 
+using index_t = uint32_t;
 using real_t = float;
 
 template <typename T>

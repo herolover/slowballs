@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.28)
 
 project(slow-balls LANGUAGES CXX)
 
+find_package(OpenMP)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -17,7 +19,7 @@ add_executable(${PROJECT_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/Main.cpp
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(${PROJECT_NAME} SDL3-static)
+target_link_libraries(${PROJECT_NAME} SDL3-static OpenMP::OpenMP_CXX)
 
 install(
     TARGETS ${PROJECT_NAME}

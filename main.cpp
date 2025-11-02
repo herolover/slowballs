@@ -1,5 +1,5 @@
 #include "SlowBallsBruteforce.h"
-#include "SlowBallsGrid.h"
+#include "SlowBallsGrid2.h"
 #include "solvers/SweepAndPrune.h"
 
 #include <SDL3/SDL.h>
@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
     }
 
     constexpr int width = 800;
-    constexpr int height = 600;
+    constexpr int height = 800;
     if (SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer) < 0)
     {
         return -1;
@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
-    constexpr slowballs::Config BRUTEFORCE_CONFIG{
+    static constexpr slowballs::Config BRUTEFORCE_CONFIG{
         .width = width * 125 / 100,
         .height = height * 125 / 100,
         .amount = 5'000,
@@ -41,19 +41,20 @@ int main(int argc, char* argv[])
         .penetration_ratio = 0.3,
         .iterations = 2,
     };
-    constexpr slowballs::Config GRID_CONFIG{
+    static constexpr slowballs::Config GRID_CONFIG{
         .width = width * 125 / 100,
         .height = height * 125 / 100,
-        .amount = 65'000,
-        .radius = 1.5,
-        .gravity = 0.004,
+        .amount = 200'000,
+        .radius = 1.0,
+        .gravity = 0.002,
         .damping = 0.99,
-        .response_force = 0.4,
+        .response_force = 0.45,
         .penetration_ratio = 0.3,
-        .iterations = 2,
+        .iterations = 3,
     };
 
-    std::unique_ptr<slowballs::SlowBalls> balls = std::make_unique<slowballs::SlowBallsGrid>(GRID_CONFIG);
+    std::unique_ptr<slowballs::SlowBallsGrid> balls = std::make_unique<slowballs::SlowBallsGrid>(GRID_CONFIG);
+    size_t count = 0;
     while (true)
     {
         SDL_PollEvent(&event);
@@ -70,15 +71,15 @@ int main(int argc, char* argv[])
             }
             else if (event.key.keysym.sym == SDLK_1)
             {
-                balls = std::make_unique<slowballs::SlowBallsBruteforce>(BRUTEFORCE_CONFIG);
+                // balls = std::make_unique<slowballs::SlowBallsBruteforce>(BRUTEFORCE_CONFIG);
             }
             else if (event.key.keysym.sym == SDLK_2)
             {
-                balls = std::make_unique<slowballs::SlowBallsSweepAndPrune>(GRID_CONFIG);
+                // balls = std::make_unique<slowballs::SlowBallsSweepAndPrune>(GRID_CONFIG);
             }
             else if (event.key.keysym.sym == SDLK_3)
             {
-                balls = std::make_unique<slowballs::SlowBallsGrid>(GRID_CONFIG);
+                // balls = std::make_unique<slowballs::SlowBallsGrid>(GRID_CONFIG);
             }
             else if (event.key.keysym.sym == SDLK_4)
             {
@@ -102,7 +103,10 @@ int main(int argc, char* argv[])
         SDL_UpdateWindowSurface(window);
         auto t3 = std::chrono::steady_clock::now();
 
-        std::print("physics: {} ms  \nrender: {} ms  \r\033[F", std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000.0, std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2).count() / 1000.0);
+        if (++count % 30 == 0)
+        {
+            std::print("physics: {} ms  \nrender: {} ms  \r\033[F", std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() / 1000.0, std::chrono::duration_cast<std::chrono::microseconds>(t3 - t2).count() / 1000.0);
+        }
     }
 
     SDL_DestroyRenderer(renderer);

@@ -3,6 +3,9 @@
 #include "Config.h"
 #include "HugePageAllocator.h"
 
+#include <immintrin.h>
+
+#include <array>
 #include <vector>
 
 namespace slowballs
@@ -23,7 +26,7 @@ struct SlowBalls
         {
             const int offset = config.double_radius() * i;
             pos_x[i] = config.min_x() * ((offset / width % 2 == 0) ? 1.5f : 1.0f) + (offset % width);
-            pos_y[i] = config.min_y() + (offset / width) * config.double_radius();
+            pos_y[i] = height - (config.min_y() + (offset / width) * config.double_radius());
         }
 
         prev_pos_x = pos_x;
@@ -38,18 +41,45 @@ struct SlowBalls
     {
         check_collisions();
 
-        for (int i = 0; i < config.amount; ++i)
+        static const auto gravity = _mm256_set1_ps(config.gravity);
+        static const auto damping = _mm256_set1_ps(config.damping);
+
+        static const auto min_x = _mm256_set1_ps(config.min_x());
+        static const auto min_y = _mm256_set1_ps(config.min_y());
+        static const auto max_x = _mm256_set1_ps(config.max_x());
+        static const auto max_y = _mm256_set1_ps(config.max_y());
+
+        for (int i = 0; i < config.amount; i += 8)
         {
-            pos_y[i] += config.gravity;
+            auto x = _mm256_loadu_ps(&pos_x[i]);
+            auto y = _mm256_loadu_ps(&pos_y[i]);
 
-            const auto prev_x = pos_x[i];
-            const auto prev_y = pos_y[i];
-            pos_x[i] += (pos_x[i] - prev_pos_x[i]) * config.damping;
-            pos_y[i] += (pos_y[i] - prev_pos_y[i]) * config.damping;
-            prev_pos_x[i] = prev_x;
-            prev_pos_y[i] = prev_y;
+            auto prev_x = _mm256_loadu_ps(&prev_pos_x[i]);
+            auto prev_y = _mm256_loadu_ps(&prev_pos_y[i]);
 
-            check_bounds(i);
+            auto diff_x = _mm256_sub_ps(x, prev_x);
+            auto diff_y = _mm256_sub_ps(_mm256_add_ps(y, gravity), prev_y);
+
+            auto damp_diff_x = _mm256_mul_ps(diff_x, damping);
+            auto damp_diff_y = _mm256_mul_ps(diff_y, damping);
+
+            auto new_x = _mm256_add_ps(x, damp_diff_x);
+            auto new_y = _mm256_add_ps(y, damp_diff_y);
+
+            auto min_x_condition = _mm256_cmp_ps(new_x, min_x, _CMP_GT_OQ);
+            auto min_y_condition = _mm256_cmp_ps(new_y, min_y, _CMP_GT_OQ);
+            auto max_x_condition = _mm256_cmp_ps(new_x, max_x, _CMP_LT_OQ);
+            auto max_y_condition = _mm256_cmp_ps(new_y, max_y, _CMP_LT_OQ);
+
+            new_x = _mm256_blendv_ps(min_x, new_x, min_x_condition);
+            new_y = _mm256_blendv_ps(min_y, new_y, min_y_condition);
+            new_x = _mm256_blendv_ps(max_x, new_x, max_x_condition);
+            new_y = _mm256_blendv_ps(max_y, new_y, max_y_condition);
+
+            _mm256_storeu_ps(&pos_x[i], new_x);
+            _mm256_storeu_ps(&pos_y[i], new_y);
+            _mm256_storeu_ps(&prev_pos_x[i], x);
+            _mm256_storeu_ps(&prev_pos_y[i], y);
         }
     }
 
@@ -57,16 +87,22 @@ struct SlowBalls
 
     void render(uint32_t* data, uint32_t value, int width)
     {
-        for (int i = 0; i < config.amount; ++i)
-        {
-            data[static_cast<int>(pos_y[i]) * width + static_cast<int>(pos_x[i])] = value;
-        }
-    }
+        const auto w = _mm256_set1_epi32(width);
 
-    void check_bounds(int i)
-    {
-        pos_x[i] = std::min(std::max(pos_x[i], config.min_x()), config.max_x());
-        pos_y[i] = std::min(std::max(pos_y[i], config.min_y()), config.max_y());
+        std::array<uint32_t, 8> pixels{};
+        for (int i = 0; i < config.amount; i += 8)
+        {
+            auto x = _mm256_cvttps_epi32(_mm256_loadu_ps(&pos_x[i]));
+            auto y = _mm256_cvttps_epi32(_mm256_loadu_ps(&pos_y[i]));
+
+            auto pixel_pos = _mm256_add_epi32(_mm256_mullo_epi32(y, w), x);
+            _mm256_storeu_si256(reinterpret_cast<__m256i*>(pixels.data()), pixel_pos);
+
+            for (auto pixel : pixels)
+            {
+                data[pixel] = value;
+            }
+        }
     }
 
     Config config;

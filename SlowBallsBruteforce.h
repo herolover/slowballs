@@ -9,7 +9,7 @@ struct SlowBallsBruteforce : SlowBalls
 {
     using SlowBalls::SlowBalls;
 
-    void resolve_collision(const uint16_t i, const uint16_t j)
+    void resolve_collision(const index_t i, const index_t j)
     {
         auto& x1 = pos_x[i];
         auto& y1 = pos_y[i];
@@ -17,8 +17,9 @@ struct SlowBallsBruteforce : SlowBalls
         auto& y2 = pos_y[j];
         auto diff_x = x1 - x2;
         auto diff_y = y1 - y2;
+        // vectorize square distance
         const real_t square_distance = diff_x * diff_x + diff_y * diff_y;
-        if (square_distance < config.square_min_distance() && square_distance > 0.0f) [[unlikely]]
+        if (square_distance < config.square_min_distance()) [[likely]]
         {
             const real_t distance = sqrtf(square_distance);
             const real_t ratio = (config.double_radius() - distance) * config.response_force / distance;
