@@ -2,6 +2,8 @@
 
 #include "SlowBalls.h"
 
+#include <cmath>
+
 namespace slowballs
 {
 

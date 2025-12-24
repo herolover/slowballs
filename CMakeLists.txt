@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.28)
 
 project(slow-balls LANGUAGES CXX)
 
-find_package(OpenMP)
+set(OpenMP_CXX_FLAGS "-fopenmp=libomp")
+set(OpenMP_CXX_LIB_NAMES "omp")
+set(OpenMP_omp_LIBRARY omp5)
+find_package(OpenMP REQUIRED)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -10,8 +13,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(SDL_STATIC ON CACHE BOOL "" FORCE)
 set(SDL_SHARED OFF CACHE BOOL "" FORCE)
-
-set(CMAKE_EXE_LINKER_FLAGS_RELEASE "/OPT:REF /OPT:ICF")
+set(SDL_WAYLAND ON CACHE BOOL "" FORCE)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/submodules/sdl)
 
@@ -20,6 +22,7 @@ add_executable(${PROJECT_NAME}
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} SDL3-static OpenMP::OpenMP_CXX)
+target_compile_options(${PROJECT_NAME} PRIVATE -mavx2)
 
 install(
     TARGETS ${PROJECT_NAME}

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Config.h"
-#include "HugePageAllocator.h"
+//#include "HugePageAllocator.h"
 
 #include <immintrin.h>
 

@@ -18,21 +18,22 @@ int main(int argc, char* argv[])
 
     if (SDL_Init(SDL_INIT_VIDEO) < 0)
     {
+        std::cerr << SDL_GetError() << std::endl;
         return -1;
     }
 
-    constexpr int width = 800;
-    constexpr int height = 800;
+    constexpr int width = 1000;
+    constexpr int height = 1000;
     if (SDL_CreateWindowAndRenderer(width, height, 0, &window, &renderer) < 0)
     {
-        return -1;
+        return -2;
     }
 
     SDL_Surface* surface = SDL_GetWindowSurface(window);
 
     static constexpr slowballs::Config BRUTEFORCE_CONFIG{
-        .width = width * 125 / 100,
-        .height = height * 125 / 100,
+        .width = width,
+        .height = height,
         .amount = 5'000,
         .radius = 5.5,
         .gravity = 0.004,
@@ -42,8 +43,8 @@ int main(int argc, char* argv[])
         .iterations = 2,
     };
     static constexpr slowballs::Config GRID_CONFIG{
-        .width = width * 125 / 100,
-        .height = height * 125 / 100,
+        .width = width,
+        .height = height,
         .amount = 200'000,
         .radius = 1.0,
         .gravity = 0.002,

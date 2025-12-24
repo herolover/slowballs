@@ -62,7 +62,7 @@ struct SlowBallsGrid : SlowBallsBruteforce
 
         for (int iter = 0; iter < config.iterations; ++iter)
         {
-//#pragma omp parallel for
+#pragma omp parallel for
             for (int i = 0; i < config.grid_size(); ++i)
             {
                 for (auto j = cell_offset[i]; j < cell_offset[i + 1]; ++j)

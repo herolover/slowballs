@@ -1,7 +1,8 @@
 #pragma once
 
-#include "HugePageAllocator.h"
+//#include "HugePageAllocator.h"
 
+#include <cstdint>
 #include <stdfloat>
 #include <vector>
 
