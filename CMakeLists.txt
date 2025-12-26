@@ -22,7 +22,7 @@ add_executable(${PROJECT_NAME}
 )
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${PROJECT_NAME} SDL3-static OpenMP::OpenMP_CXX)
-target_compile_options(${PROJECT_NAME} PRIVATE -mavx2)
+target_compile_options(${PROJECT_NAME} PRIVATE -mavx2 -O3)
 
 install(
     TARGETS ${PROJECT_NAME}

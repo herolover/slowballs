@@ -33,6 +33,11 @@ struct Config
         return radius * 2.0;
     }
 
+    constexpr auto double_radius_response_force() const
+    {
+        return radius * 2.0 * response_force;
+    }
+
     constexpr auto square_radius() const
     {
         return radius * radius;

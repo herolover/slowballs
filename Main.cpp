@@ -1,6 +1,4 @@
-#include "SlowBallsBruteforce.h"
 #include "SlowBallsGrid2.h"
-#include "solvers/SweepAndPrune.h"
 
 #include <SDL3/SDL.h>
 
@@ -54,7 +52,8 @@ int main(int argc, char* argv[])
         .iterations = 3,
     };
 
-    std::unique_ptr<slowballs::SlowBallsGrid> balls = std::make_unique<slowballs::SlowBallsGrid>(GRID_CONFIG);
+    slowballs::SlowBallsGrid<GRID_CONFIG> balls;
+
     size_t count = 0;
     while (true)
     {
@@ -70,26 +69,11 @@ int main(int argc, char* argv[])
             {
                 break;
             }
-            else if (event.key.keysym.sym == SDLK_1)
-            {
-                // balls = std::make_unique<slowballs::SlowBallsBruteforce>(BRUTEFORCE_CONFIG);
-            }
-            else if (event.key.keysym.sym == SDLK_2)
-            {
-                // balls = std::make_unique<slowballs::SlowBallsSweepAndPrune>(GRID_CONFIG);
-            }
-            else if (event.key.keysym.sym == SDLK_3)
-            {
-                // balls = std::make_unique<slowballs::SlowBallsGrid>(GRID_CONFIG);
-            }
-            else if (event.key.keysym.sym == SDLK_4)
-            {
-            }
         }
 
         auto t1 = std::chrono::steady_clock::now();
 
-        balls->update();
+        balls.update();
 
         auto t2 = std::chrono::steady_clock::now();
 
@@ -98,7 +82,7 @@ int main(int argc, char* argv[])
 
         static const auto value = SDL_MapRGB(surface->format, 255, 255, 255);
         uint32_t* data = static_cast<uint32_t*>(surface->pixels);
-        balls->render(data, value, surface->w);
+        balls.render(data, value, surface->w);
 
         SDL_UnlockSurface(surface);
         SDL_UpdateWindowSurface(window);

@@ -7,15 +7,16 @@
 
 #include <array>
 #include <vector>
+#include <cmath>
 
 namespace slowballs
 {
 
+template<Config config>
 struct SlowBalls
 {
-    SlowBalls(const Config& config)
-    : config(config)
-    , pos_x(config.amount)
+    SlowBalls()
+    : pos_x(config.amount)
     , pos_y(config.amount)
     , prev_pos_x(config.amount)
     , prev_pos_y(config.amount)
@@ -83,6 +84,28 @@ struct SlowBalls
         }
     }
 
+    void resolve_collision(real_t& x1, real_t& y1, const index_t j)
+    {
+        auto& x2 = pos_x[j];
+        auto& y2 = pos_y[j];
+        auto diff_x = x1 - x2;
+        auto diff_y = y1 - y2;
+        // vectorize square distance
+        const real_t square_distance = diff_x * diff_x + diff_y * diff_y;
+        if (square_distance < config.square_min_distance()) [[likely]]
+        {
+            const real_t distance = sqrtf(square_distance);
+            const real_t ratio = config.double_radius_response_force() / distance - config.response_force;
+            diff_x *= ratio;
+            diff_y *= ratio;
+            x1 += diff_x;
+            x2 -= diff_x;
+            y1 += diff_y;
+            y2 -= diff_y;
+        }
+    }
+
+
     virtual void check_collisions() = 0;
 
     void render(uint32_t* data, uint32_t value, int width)
@@ -105,7 +128,6 @@ struct SlowBalls
         }
     }
 
-    Config config;
     vector_t<real_t> pos_x;
     vector_t<real_t> pos_y;
     vector_t<real_t> prev_pos_x;

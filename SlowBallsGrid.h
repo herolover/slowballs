@@ -6,6 +6,7 @@
 
 #include <array>
 #include <limits>
+#include <memory>
 
 namespace slowballs
 {
@@ -26,7 +27,7 @@ struct SlowBallsGrid : SlowBallsBruteforce
 
     void check_collisions()
     {
-        std::memset(cell_count.data(), 0, sizeof(index_t) * config.grid_size());
+        std::fill(cell_count.begin(), cell_count.end(), 0);
         for (index_t i = 0; i < config.amount; ++i)
         {
             const int cell_x = pos_x[i] / config.grid_cell_size();
